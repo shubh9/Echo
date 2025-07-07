@@ -1,24 +1,42 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
+import VoiceAgentPanel from "./components/VoiceAgentPanel";
+
+const gradientBackground =
+  "radial-gradient(circle at 50% -20%, #5B6BFF 0%, #5B6BFF 5%, #4650FF 20%, #3733FF 35%, #D34AFF 60%, #FF616D 75%, #FF9961 90%)";
 
 const App: React.FC = () => {
-  const [message, setMessage] = useState<string>("Loading...");
-
-  useEffect(() => {
-    fetch("/api/hello")
-      .then((res) => res.json())
-      .then((data) => setMessage(data.message))
-      .catch((err) => setMessage("Error: " + err.toString()));
-  }, []);
-
   return (
     <div
       style={{
-        fontFamily: "sans-serif",
+        minHeight: "100vh",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        fontFamily:
+          'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+        color: "#ffffff",
         textAlign: "center",
-        marginTop: "2rem",
+        padding: "0 1.5rem",
+        background: gradientBackground,
+        overflowX: "hidden",
       }}
     >
-      <h1>{message}</h1>
+      <div style={{ maxWidth: 960, width: "100%" }}>
+        <h1
+          style={{
+            fontSize: "clamp(2.25rem, 5vw + 1rem, 4rem)",
+            fontWeight: 700,
+            margin: 0,
+            letterSpacing: "-0.02em",
+          }}
+        >
+          Build Voice Assistants through Voice.. duh
+        </h1>
+        <div style={{ marginTop: "1rem" }}>
+          <VoiceAgentPanel />
+        </div>
+      </div>
     </div>
   );
 };
