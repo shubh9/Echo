@@ -1,5 +1,7 @@
 # Echo
 
+Create voice assistants through voice
+
 ## Prerequisites
 
 - Node.js ≥ 18
