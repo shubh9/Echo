@@ -1,0 +1,17 @@
+{
+  "name": "echo-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "packageManager": "pnpm@8.15.0",
+  "workspaces": [
+    "client",
+    "server"
+  ],
+  "scripts": {
+    "dev": "concurrently -k \"pnpm --filter ./server dev\" \"pnpm --filter ./client dev\"",
+    "build": "pnpm --filter ./server build && pnpm --filter ./client build"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.0"
+  }
+}
