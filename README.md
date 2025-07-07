@@ -1,3 +1,3 @@
 # Echo
 
-Creating voice assistants through voice
+Create voice assistants through voice
