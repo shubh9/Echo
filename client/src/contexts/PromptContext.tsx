@@ -142,7 +142,7 @@ If they express concerns about time: "I understand. This will take approximately
 Remember that your ultimate goal is to collect complete and accurate information while providing a respectful, secure, and efficient experience for the customer. Always prioritize data accuracy while maintaining a conversational, patient approach to information collection.`;
 
 const defaultPrompt =
-  "You are Echo Voice AI, a helpful assistant. Keep responses concise and friendly. If the user says to change the prompt call the edit prompt function.";
+  "You are Echo Voice AI, a helpful assistant. Keep responses concise and friendly.";
 
 interface PromptContextValue {
   prompt: string;
@@ -152,7 +152,7 @@ interface PromptContextValue {
 const PromptContext = createContext<PromptContextValue | undefined>(undefined);
 
 export function PromptProvider({ children }: { children: ReactNode }) {
-  const [prompt, setPrompt] = useState<string>(infoCollectionPrompt);
+  const [prompt, setPrompt] = useState<string>(defaultPrompt);
 
   return (
     <PromptContext.Provider value={{ prompt, setPrompt }}>

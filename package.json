@@ -9,7 +9,9 @@
   ],
   "scripts": {
     "dev": "concurrently -k \"pnpm --filter ./server dev\" \"pnpm --filter ./client dev\"",
-    "build": "pnpm --filter ./server build && pnpm --filter ./client build"
+    "build": "pnpm --filter ./server build && pnpm --filter ./client build",
+    "vercel-build": "pnpm --filter ./server build",
+    "start": "node server/dist/index.js"
   },
   "devDependencies": {
     "concurrently": "^8.2.0"

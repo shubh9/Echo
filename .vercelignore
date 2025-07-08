@@ -1,0 +1,12 @@
+client/
+*.md
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+node_modules/
+.git/
+.gitignore
+README.md
+pnpm-lock.yaml
+.pnpm-store/ 
