@@ -1,7 +1,16 @@
 import express from "express";
+import cors from "cors";
 import { generate } from "./llmService";
 
 const app = express();
+
+// Enable CORS for all origins (development only)
+app.use(
+  cors({
+    origin: true,
+    credentials: true,
+  })
+);
 
 app.use(express.json());
 
@@ -85,7 +94,7 @@ Use these H2 sections—**exactly in this order**:
   }
 }
 
-app.get("/api/hello", (_req, res) => {
+app.get("/hello", (_req, res) => {
   res.json({ message: "Hello from the server!" });
 });
 
@@ -95,7 +104,7 @@ app.get("/", (_req, res) => {
 });
 
 // Endpoint for Edit Voice AI Prompt function calls
-app.post("/api/edit-voice-ai-prompt", async (req, res) => {
+app.post("/edit-voice-ai-prompt", async (req, res) => {
   const { toolCall, conversationTranscript, currentPrompt } = req.body;
 
   console.log("Received Edit Voice AI Prompt call:");

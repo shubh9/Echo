@@ -7,9 +7,9 @@ import { usePrompt } from "../contexts/PromptContext";
 const PUBLIC_KEY = import.meta.env.VITE_VAPI_PUBLIC_KEY as string | undefined;
 
 // Server URL - use production URL in production, local proxy in development
-const SERVER_URL = import.meta.env.PROD
+export const SERVER_URL = import.meta.env.PROD
   ? "https://echo-server-eight.vercel.app"
-  : "";
+  : "http://localhost:3000";
 
 // We will generate a fresh assistant each call using the provided prompt.
 
@@ -120,7 +120,7 @@ export default function useVapi() {
         playHoldMusic();
 
         // Call our backend to get the updated prompt
-        fetch(`${SERVER_URL}/api/edit-voice-ai-prompt`, {
+        fetch(`${SERVER_URL}/edit-voice-ai-prompt`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
