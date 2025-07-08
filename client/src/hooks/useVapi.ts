@@ -18,6 +18,38 @@ export default function useVapi() {
   );
   const { prompt, setPrompt } = usePrompt();
 
+  const functionCallPromptAddition =
+    "### Tool Call Instructions: If the user asks you to change something about you or what you said, they are likely refering to the prompt, call the edit voice prompt function";
+
+  // --- Hold music setup (bare-bones HTML5 Audio) ---
+  const holdMusicRef = useRef<HTMLAudioElement | null>(null);
+
+  // Create the Audio instance once when the hook mounts
+  useEffect(() => {
+    // Randomly choose between the two audio files
+    // 80% chance for slack_jazz.mp3, 20% chance for snake_jazz.mp3
+    const randomChoice = Math.random();
+    console.log("Random choice:", randomChoice);
+    const audioFile =
+      randomChoice < 0.8 ? "/slack_jazz.mp3" : "/snake_jazz.mp3";
+
+    holdMusicRef.current = new Audio(audioFile);
+    holdMusicRef.current.loop = true;
+    holdMusicRef.current.volume = 0.5; // Set volume to 50%
+  }, []);
+
+  const playHoldMusic = () => holdMusicRef.current?.play();
+  const stopHoldMusic = () => {
+    if (!holdMusicRef.current) return;
+    holdMusicRef.current.pause();
+    holdMusicRef.current.currentTime = 0;
+  };
+
+  const stopSessionAndResetTranscript = useCallback(() => {
+    vapiRef.current?.stop();
+    setConversationTranscript([]);
+  }, []);
+
   const init = useCallback(() => {
     if (!PUBLIC_KEY) {
       console.warn("Vapi public key not set – check your .env file");
@@ -76,7 +108,10 @@ export default function useVapi() {
         setLastFunctionCall(toolCall);
 
         // Stop the current session before modifying the prompt
-        vapiRef.current?.stop();
+        stopSessionAndResetTranscript();
+
+        // Play hold music while we wait for the backend response
+        playHoldMusic();
 
         // Call our backend to get the updated prompt
         fetch("/api/edit-voice-ai-prompt", {
@@ -97,7 +132,11 @@ export default function useVapi() {
             setPrompt(data.newPrompt);
             startCall(data.newPrompt);
           })
-          .catch((err) => console.error("Failed to call endpoint", err));
+          .catch((err) => console.error("Failed to call endpoint", err))
+          .finally(() => {
+            // Ensure hold music stops regardless of success/failure
+            stopHoldMusic();
+          });
       }
     };
 
@@ -141,7 +180,7 @@ export default function useVapi() {
           messages: [
             {
               role: "system",
-              content: promptToUse,
+              content: promptToUse + functionCallPromptAddition,
             },
           ],
           tools: [
@@ -201,6 +240,7 @@ export default function useVapi() {
   return {
     toggleCall,
     startCall,
+    stopSessionAndResetTranscript,
     isSessionActive,
     isLoading,
     volumeLevel,

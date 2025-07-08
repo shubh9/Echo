@@ -14,12 +14,12 @@ const App: React.FC = () => {
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          justifyContent: "center",
+          justifyContent: "flex-start",
           fontFamily:
             'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
           color: "#ffffff",
           textAlign: "center",
-          padding: "0 1.5rem",
+          padding: "4rem 1.5rem 0",
           background: gradientBackground,
           overflowX: "hidden",
         }}

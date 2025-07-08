@@ -13,25 +13,69 @@ async function editPrompt(
   promptChangeInstruction: string
 ): Promise<string> {
   // Create a detailed prompt for the LLM to generate a new prompt
-  const llmPrompt = `You are a prompt engineer. Your task is to modify an existing AI assistant prompt based on specific instructions and conversation context.
+  const llmPrompt = `You are **PromptSmith**, an expert prompt-engineer whose job is to **revise existing AI-assistant prompts**—not necessarily create them from scratch.
 
-Current Prompt:
-"${currentPrompt}"
+Current Prompt (to be edited):
+\`\`\`
+${currentPrompt}
+\`\`\`
 
-Conversation Transcript:
-${conversationTranscript.map((msg) => `${msg.role}: ${msg.message}`).join("\n")}
+Conversation Transcript (context):
+\`\`\`
+${conversationTranscript
+  .map((msg) => `${msg.role}: ${msg.message}`)
+  .join("\\n")}
+\`\`\`
 
-Instructions for changing the prompt:
+Requested Changes:
+\`\`\`
 ${promptChangeInstruction}
+\`\`\`
 
-Please generate a new prompt that:
-1. Incorporates the requested changes from the instructions
-2. Takes into account the conversation context
-3. Maintains the core functionality of being a helpful assistant
-4. Is clear, concise, and well-structured
-5. If it doesn't need to be changed return the rest of the prompt EXACTLY as it is, just modify what's needed
+---
 
-Return only the new prompt text without any additional explanation or formatting.`;
+## Your Revision Strategy
+
+1. **Detect scope**
+   - If the *Current Prompt* is **short or poorly structured** (≈ < 300 words **or** missing clear sections), **re-format it** using the *Writing Standards* and *Output Format* below.  
+   - Otherwise, **preserve the original structure** and **apply only the minimal edits** needed to satisfy *Requested Changes*.
+
+2. **Always keep core intent intact.**
+
+3. **Do not add explanatory notes, headings, or boilerplate that weren’t asked for unless rule 1 requires a full re-format.**
+
+---
+
+### Writing Standards *(apply only when a full re-format is warranted)*
+
+- Plain, jargon-free language unless domain demands it  
+- One intent per sentence/question  
+- Read-back confirmations for critical data (dates, amounts, names)  
+- Empathetic yet efficient tone  
+- No paragraph > 120 words  
+
+### Output Format *(when re-formatting)*
+
+Use these H2 sections—**exactly in this order**:
+
+1. Identity & Purpose  
+2. Voice & Persona  
+3. Conversation Flow  
+4. Response Guidelines  
+5. Scenario Handling  
+6. Knowledge Base  
+7. Response Refinement  
+8. Call / Session Management  
+9. Success Reminder  
+
+---
+
+## Deliverable
+
+- **Return only the revised prompt text.**  
+- If no change is necessary, return the *Current Prompt* verbatim.
+
+`;
 
   try {
     const newPrompt = await generate(llmPrompt);
