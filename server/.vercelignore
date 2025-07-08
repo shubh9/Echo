@@ -1,4 +1,4 @@
-client/
+src/
 *.md
 .env.local
 .env.development.local
@@ -8,5 +8,4 @@ node_modules/
 .git/
 .gitignore
 README.md
-pnpm-lock.yaml
-.pnpm-store/ 
+tsconfig.json 
