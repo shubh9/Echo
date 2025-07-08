@@ -5,6 +5,12 @@ import { usePrompt } from "../contexts/PromptContext";
 
 // Vite exposes env vars as import.meta.env
 const PUBLIC_KEY = import.meta.env.VITE_VAPI_PUBLIC_KEY as string | undefined;
+
+// Server URL - use production URL in production, local proxy in development
+const SERVER_URL = import.meta.env.PROD
+  ? "https://echo-server-eight.vercel.app"
+  : "";
+
 // We will generate a fresh assistant each call using the provided prompt.
 
 export default function useVapi() {
@@ -114,7 +120,7 @@ export default function useVapi() {
         playHoldMusic();
 
         // Call our backend to get the updated prompt
-        fetch("/api/edit-voice-ai-prompt", {
+        fetch(`${SERVER_URL}/api/edit-voice-ai-prompt`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
