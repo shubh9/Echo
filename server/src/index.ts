@@ -89,6 +89,11 @@ app.get("/api/hello", (_req, res) => {
   res.json({ message: "Hello from the server!" });
 });
 
+// Root endpoint
+app.get("/", (_req, res) => {
+  res.json({ message: "hello world" });
+});
+
 // Endpoint for Edit Voice AI Prompt function calls
 app.post("/api/edit-voice-ai-prompt", async (req, res) => {
   const { toolCall, conversationTranscript, currentPrompt } = req.body;
