@@ -11,6 +11,11 @@ export default function useVapi() {
   const [isSessionActive, setIsSessionActive] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [volumeLevel, setVolumeLevel] = useState(0);
+  const [lastFunctionCall, setLastFunctionCall] = useState<any>(null);
+  const [conversationTranscript, setConversationTranscript] = useState<any[]>(
+    []
+  );
+  const [currentPrompt, setCurrentPrompt] = useState<string>("default");
 
   const init = useCallback(() => {
     if (!PUBLIC_KEY) {
@@ -24,6 +29,7 @@ export default function useVapi() {
       instance.on("call-start", () => {
         setIsSessionActive(true);
         setIsLoading(false);
+        setConversationTranscript([]); // Reset transcript on new call
       });
 
       instance.on("call-end", () => {
@@ -40,6 +46,54 @@ export default function useVapi() {
     }
   }, []);
 
+  // Set up message handler with proper dependencies
+  useEffect(() => {
+    if (!vapiRef.current) return;
+
+    const handleMessage = (message: any) => {
+      // Track conversation messages for transcript
+      if (message?.type === "conversation-update") {
+        //   console.log("Conversation update:", message);
+        // Extract simplified transcript with just role and message
+        const simplifiedMessages = message.messages
+          ?.filter((msg: any) => msg.role && msg.message)
+          .map((msg: any) => ({
+            role: msg.role,
+            message: msg.message,
+          }));
+
+        if (simplifiedMessages && simplifiedMessages.length > 0) {
+          setConversationTranscript(simplifiedMessages);
+        }
+      }
+
+      if (message?.type === "tool-calls") {
+        const toolCall = message.toolCallList?.[0];
+        if (!toolCall) return;
+
+        console.log("Received tool call:", toolCall);
+        setLastFunctionCall(toolCall);
+
+        // Now we can safely use current state values directly!
+        fetch("/api/edit-voice-ai-prompt", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            toolCall,
+            conversationTranscript, // ✅ Fresh value!
+            currentPrompt, // ✅ Fresh value!
+          }),
+        }).catch((err) => console.error("Failed to call endpoint", err));
+      }
+    };
+
+    vapiRef.current.on("message", handleMessage);
+
+    return () => {
+      vapiRef.current?.off("message", handleMessage);
+    };
+  }, [conversationTranscript, currentPrompt]); // Re-run when either changes
+
   useEffect(() => {
     init();
     return () => {
@@ -50,12 +104,18 @@ export default function useVapi() {
 
   const toggleCall = async (prompt: string) => {
     if (!vapiRef.current) return;
+
+    console.log("Toggling call with prompt:", prompt);
+    // Store the current prompt in state
+    setCurrentPrompt(prompt);
+
     try {
       if (isSessionActive) {
         await vapiRef.current.stop();
       } else {
         setIsLoading(true);
         const assistantConfig = {
+          clientMessages: ["tool-calls", "conversation-update"],
           model: {
             provider: "openai",
             model: "gpt-4o",
@@ -64,6 +124,19 @@ export default function useVapi() {
               {
                 role: "system",
                 content: prompt,
+              },
+            ],
+            tools: [
+              {
+                type: "function",
+                function: {
+                  name: "edit_voice_ai_prompt",
+                  description: "Edit Voice AI Prompt",
+                  parameters: {
+                    type: "object",
+                    properties: {},
+                  },
+                },
               },
             ],
           },
@@ -86,5 +159,12 @@ export default function useVapi() {
     }
   };
 
-  return { toggleCall, isSessionActive, isLoading, volumeLevel };
+  return {
+    toggleCall,
+    isSessionActive,
+    isLoading,
+    volumeLevel,
+    lastFunctionCall,
+    conversationTranscript,
+  };
 }
