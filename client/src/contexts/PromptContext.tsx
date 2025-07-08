@@ -152,7 +152,7 @@ interface PromptContextValue {
 const PromptContext = createContext<PromptContextValue | undefined>(undefined);
 
 export function PromptProvider({ children }: { children: ReactNode }) {
-  const [prompt, setPrompt] = useState<string>(defaultPrompt);
+  const [prompt, setPrompt] = useState<string>(infoCollectionPrompt);
 
   return (
     <PromptContext.Provider value={{ prompt, setPrompt }}>
