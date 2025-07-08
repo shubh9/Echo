@@ -1,6 +1,7 @@
 /// <reference types="vite/client" />
 import { useEffect, useRef, useState, useCallback } from "react";
 import Vapi from "@vapi-ai/web";
+import { usePrompt } from "../contexts/PromptContext";
 
 // Vite exposes env vars as import.meta.env
 const PUBLIC_KEY = import.meta.env.VITE_VAPI_PUBLIC_KEY as string | undefined;
@@ -15,7 +16,7 @@ export default function useVapi() {
   const [conversationTranscript, setConversationTranscript] = useState<any[]>(
     []
   );
-  const [currentPrompt, setCurrentPrompt] = useState<string>("default");
+  const { prompt, setPrompt } = usePrompt();
 
   const init = useCallback(() => {
     if (!PUBLIC_KEY) {
@@ -74,16 +75,29 @@ export default function useVapi() {
         console.log("Received tool call:", toolCall);
         setLastFunctionCall(toolCall);
 
-        // Now we can safely use current state values directly!
+        // Stop the current session before modifying the prompt
+        vapiRef.current?.stop();
+
+        // Call our backend to get the updated prompt
         fetch("/api/edit-voice-ai-prompt", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             toolCall,
-            conversationTranscript, // ✅ Fresh value!
-            currentPrompt, // ✅ Fresh value!
+            conversationTranscript,
+            currentPrompt: prompt,
           }),
-        }).catch((err) => console.error("Failed to call endpoint", err));
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            console.log("Edit prompt response:", data);
+            if (!data.newPrompt) {
+              throw new Error("No new prompt found in edit prompt response");
+            }
+            setPrompt(data.newPrompt);
+            startCall(data.newPrompt);
+          })
+          .catch((err) => console.error("Failed to call endpoint", err));
       }
     };
 
@@ -92,7 +106,7 @@ export default function useVapi() {
     return () => {
       vapiRef.current?.off("message", handleMessage);
     };
-  }, [conversationTranscript, currentPrompt]); // Re-run when either changes
+  }, [conversationTranscript, prompt]);
 
   useEffect(() => {
     init();
@@ -102,65 +116,91 @@ export default function useVapi() {
     };
   }, [init]);
 
-  const toggleCall = async (prompt: string) => {
-    if (!vapiRef.current) return;
+  const startCall = async (promptToUse: string) => {
+    if (!vapiRef.current) {
+      console.log("No Vapi instance found");
+      return;
+    }
 
-    console.log("Toggling call with prompt:", prompt);
-    // Store the current prompt in state
-    setCurrentPrompt(prompt);
-
+    console.log("Starting call with prompt:", promptToUse);
     try {
+      // If a session is already active, stop it before starting a new one
       if (isSessionActive) {
         await vapiRef.current.stop();
-      } else {
-        setIsLoading(true);
-        const assistantConfig = {
-          clientMessages: ["tool-calls", "conversation-update"],
-          model: {
-            provider: "openai",
-            model: "gpt-4o",
-            temperature: 0.7,
-            messages: [
-              {
-                role: "system",
-                content: prompt,
-              },
-            ],
-            tools: [
-              {
-                type: "function",
-                function: {
-                  name: "edit_voice_ai_prompt",
-                  description: "Edit Voice AI Prompt",
-                  parameters: {
-                    type: "object",
-                    properties: {},
+      }
+
+      setIsLoading(true);
+
+      const assistantConfig = {
+        firstMessage: "Hi how are you?",
+        clientMessages: ["tool-calls", "conversation-update"],
+        model: {
+          provider: "openai",
+          model: "gpt-4o",
+          temperature: 0.7,
+          messages: [
+            {
+              role: "system",
+              content: promptToUse,
+            },
+          ],
+          tools: [
+            {
+              type: "function",
+              function: {
+                name: "edit_voice_ai_prompt",
+                description: "Edit Voice AI Prompt",
+                parameters: {
+                  type: "object",
+                  properties: {
+                    prompt_change_instruction: {
+                      type: "string",
+                      description:
+                        "How the user wants the prompt to be changed or modified, have this be EXACTLY what the user said",
+                    },
                   },
+                  required: ["prompt_change_instruction"],
                 },
               },
-            ],
-          },
-          voice: {
-            provider: "11labs",
-            voiceId: "burt",
-          },
-          transcriber: {
-            provider: "deepgram",
-            model: "nova-2",
-            language: "en",
-          },
-        } as any;
+            },
+          ],
+        },
+        voice: {
+          provider: "11labs",
+          voiceId: "burt",
+        },
+        transcriber: {
+          provider: "deepgram",
+          model: "nova-2",
+          language: "en",
+        },
+      } as any;
 
-        await vapiRef.current.start(assistantConfig);
-      }
+      await vapiRef.current.start(assistantConfig);
     } catch (err) {
       console.error(err);
       setIsLoading(false);
     }
   };
 
+  const toggleCall = async (promptToUse: string) => {
+    if (!vapiRef.current) {
+      console.log("No Vapi instance found");
+      return;
+    }
+
+    console.log("Toggling call with prompt:", promptToUse);
+
+    if (isSessionActive) {
+      await vapiRef.current.stop();
+    } else {
+      await startCall(promptToUse);
+    }
+  };
+
   return {
     toggleCall,
+    startCall,
     isSessionActive,
     isLoading,
     volumeLevel,

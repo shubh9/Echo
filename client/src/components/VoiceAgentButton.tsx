@@ -1,11 +1,9 @@
 import React from "react";
 import useVapi from "../hooks/useVapi";
+import { usePrompt } from "../contexts/PromptContext";
 
-interface Props {
-  prompt: string;
-}
-
-const VoiceAgentButton: React.FC<Props> = ({ prompt }) => {
+const VoiceAgentButton: React.FC = () => {
+  const { prompt } = usePrompt();
   const { toggleCall, isSessionActive, isLoading, volumeLevel } = useVapi();
 
   const scale = isSessionActive ? 1 + volumeLevel * 0.3 : 1;
