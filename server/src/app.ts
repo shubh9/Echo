@@ -1,6 +1,6 @@
 import express from "express";
 import cors from "cors";
-import { generate } from "../llmService";
+import { generate } from "./llmService";
 
 const app = express();
 
