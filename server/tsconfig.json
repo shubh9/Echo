@@ -11,5 +11,5 @@
     "outDir": "dist",
     "types": ["node"]
   },
-  "include": ["src/app.ts", "llmService.ts"]
+  "include": ["api/*.ts", "src/*.ts"]
 }
