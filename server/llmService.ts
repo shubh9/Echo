@@ -1,5 +1,6 @@
 import OpenAI from "openai";
 import dotenv from "dotenv";
+
 dotenv.config();
 
 // Initialize the OpenAI client using the API key from the environment
@@ -10,10 +11,10 @@ const openai = new OpenAI({
 /**
  * Generates a response from the OpenAI Chat Completion API.
  *
- * @param prompt - The prompt/question to send to the model.
- * @returns The model's response as a string.
+ * @param {string} prompt - The prompt/question to send to the model.
+ * @returns {Promise<string>} The model's response as a string.
  */
-export async function generate(prompt: string): Promise<string> {
+export async function generate(prompt) {
   if (!openai.apiKey) {
     throw new Error(
       "OPENAI_API_KEY is not set. Please provide it in your environment variables."
