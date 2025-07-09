@@ -14,7 +14,7 @@ const openai = new OpenAI({
  * @param {string} prompt - The prompt/question to send to the model.
  * @returns {Promise<string>} The model's response as a string.
  */
-export async function generate(prompt) {
+export async function generate(prompt: string): Promise<string> {
   if (!openai.apiKey) {
     throw new Error(
       "OPENAI_API_KEY is not set. Please provide it in your environment variables."

@@ -22,37 +22,50 @@ export default function useVapi() {
   const [conversationTranscript, setConversationTranscript] = useState<any[]>(
     []
   );
-  const { prompt, setPrompt } = usePrompt();
+  const { prompt, setPrompt, firstMessage, setFirstMessage } = usePrompt();
 
   const functionCallPromptAddition =
-    "### Tool Call Instructions: If the user asks you to change something about you or what you said, they are likely refering to the prompt, call the edit voice prompt function";
+    "### Tool Call Instructions: If the user asks you to change something about you or what you said or to write a prompt, they are likely refering to the prompt, call the edit voice prompt function";
 
   // --- Hold music setup (bare-bones HTML5 Audio) ---
   const holdMusicRef = useRef<HTMLAudioElement | null>(null);
 
-  // Create the Audio instance once when the hook mounts
-  useEffect(() => {
-    // Randomly choose between the two audio files
-    // 80% chance for slack_jazz.mp3, 20% chance for snake_jazz.mp3
-    const randomChoice = Math.random();
-    console.log("Random choice:", randomChoice);
-    const audioFile =
-      randomChoice < 0.8 ? "/slack_jazz.mp3" : "/snake_jazz.mp3";
+  // We will create the audio element right before playing it. This guarantees
+  // a fresh random track every time the hold music starts, so no setup is
+  // needed at mount.
 
-    holdMusicRef.current = new Audio(audioFile);
-    holdMusicRef.current.loop = true;
-    holdMusicRef.current.volume = 0.5; // Set volume to 50%
-  }, []);
+  // Play hold music – choose a random track each time we (re)start it
+  const playHoldMusic = () => {
+    // If we don't have an audio element yet (or it was cleared after stopping),
+    // create a new one with a freshly-randomised track.
+    if (!holdMusicRef.current) {
+      const randomChoice = Math.random();
+      const audioFile =
+        randomChoice < 0.95 ? "/slack_jazz.mp3" : "/snake_jazz.mp3";
 
-  const playHoldMusic = () => holdMusicRef.current?.play();
+      holdMusicRef.current = new Audio(audioFile);
+      holdMusicRef.current.loop = true;
+      holdMusicRef.current.volume = 0.5; // 50% volume
+    }
+
+    holdMusicRef.current?.play();
+  };
+
   const stopHoldMusic = () => {
     if (!holdMusicRef.current) return;
     holdMusicRef.current.pause();
     holdMusicRef.current.currentTime = 0;
+
+    // Clear the reference so the next play picks a new random track
+    holdMusicRef.current = null;
   };
 
-  const stopSessionAndResetTranscript = useCallback(() => {
-    vapiRef.current?.stop();
+  const stopSessionAndResetTranscript = useCallback(async () => {
+    await vapiRef.current?.stop();
+    console.log("Stopping session and resetting transcript");
+    setTimeout(() => {
+      playHoldMusic();
+    }, 1000);
     setConversationTranscript([]);
   }, []);
 
@@ -95,7 +108,9 @@ export default function useVapi() {
         //   console.log("Conversation update:", message);
         // Extract simplified transcript with just role and message
         const simplifiedMessages = message.messages
-          ?.filter((msg: any) => msg.role && msg.message)
+          ?.filter(
+            (msg: any) => msg.role && msg.message && msg.role !== "system"
+          )
           .map((msg: any) => ({
             role: msg.role,
             message: msg.message,
@@ -116,9 +131,6 @@ export default function useVapi() {
         // Stop the current session before modifying the prompt
         stopSessionAndResetTranscript();
 
-        // Play hold music while we wait for the backend response
-        playHoldMusic();
-
         // Call our backend to get the updated prompt
         fetch(`${SERVER_URL}/edit-voice-ai-prompt`, {
           method: "POST",
@@ -127,6 +139,7 @@ export default function useVapi() {
             toolCall,
             conversationTranscript,
             currentPrompt: prompt,
+            firstMessage,
           }),
         })
           .then((response) => response.json())
@@ -136,7 +149,11 @@ export default function useVapi() {
               throw new Error("No new prompt found in edit prompt response");
             }
             setPrompt(data.newPrompt);
-            startCall(data.newPrompt);
+            // Update first message if provided by the backend (can be empty)
+            if (typeof data.newFirstMessage === "string") {
+              setFirstMessage(data.newFirstMessage);
+            }
+            startCall(data.newPrompt, data.newFirstMessage);
           })
           .catch((err) => console.error("Failed to call endpoint", err))
           .finally(() => {
@@ -161,13 +178,12 @@ export default function useVapi() {
     };
   }, [init]);
 
-  const startCall = async (promptToUse: string) => {
+  const startCall = async (promptToUse: string, firstMessageToUse?: string) => {
     if (!vapiRef.current) {
       console.log("No Vapi instance found");
       return;
     }
 
-    console.log("Starting call with prompt:", promptToUse);
     try {
       // If a session is already active, stop it before starting a new one
       if (isSessionActive) {
@@ -176,8 +192,8 @@ export default function useVapi() {
 
       setIsLoading(true);
 
-      const assistantConfig = {
-        firstMessage: "Hi how are you?",
+      // Build assistant configuration dynamically so we omit `firstMessage` when empty.
+      const assistantConfig: any = {
         clientMessages: ["tool-calls", "conversation-update"],
         model: {
           provider: "openai",
@@ -221,6 +237,11 @@ export default function useVapi() {
         },
       } as any;
 
+      // Only include firstMessage if it's not an empty string
+      if (firstMessageToUse && firstMessageToUse.trim().length > 0) {
+        assistantConfig.firstMessage = firstMessageToUse.trim();
+      }
+
       await vapiRef.current.start(assistantConfig);
     } catch (err) {
       console.error(err);
@@ -228,25 +249,25 @@ export default function useVapi() {
     }
   };
 
-  const toggleCall = async (promptToUse: string) => {
+  const toggleCall = async (
+    promptToUse: string,
+    firstMessageToUse?: string
+  ) => {
     if (!vapiRef.current) {
       console.log("No Vapi instance found");
       return;
     }
 
-    console.log("Toggling call with prompt:", promptToUse);
-
     if (isSessionActive) {
       await vapiRef.current.stop();
     } else {
-      await startCall(promptToUse);
+      await startCall(promptToUse, firstMessage);
     }
   };
 
   return {
     toggleCall,
     startCall,
-    stopSessionAndResetTranscript,
     isSessionActive,
     isLoading,
     volumeLevel,

@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useState, ReactNode } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
 
 const infoCollectionPrompt = `# Information Collection & Verification Agent Prompt
 
@@ -147,15 +153,37 @@ const defaultPrompt =
 interface PromptContextValue {
   prompt: string;
   setPrompt: (prompt: string) => void;
+  firstMessage: string;
+  setFirstMessage: (message: string) => void;
 }
 
 const PromptContext = createContext<PromptContextValue | undefined>(undefined);
 
 export function PromptProvider({ children }: { children: ReactNode }) {
-  const [prompt, setPrompt] = useState<string>(defaultPrompt);
+  // Load from localStorage on initialization
+  const [prompt, setPrompt] = useState<string>(() => {
+    const savedPrompt = localStorage.getItem("voiceAgent_prompt");
+    return savedPrompt || defaultPrompt;
+  });
+
+  const [firstMessage, setFirstMessage] = useState<string>(() => {
+    const savedFirstMessage = localStorage.getItem("voiceAgent_firstMessage");
+    return savedFirstMessage || "";
+  });
+
+  // Save to localStorage whenever values change
+  useEffect(() => {
+    localStorage.setItem("voiceAgent_prompt", prompt);
+  }, [prompt]);
+
+  useEffect(() => {
+    localStorage.setItem("voiceAgent_firstMessage", firstMessage);
+  }, [firstMessage]);
 
   return (
-    <PromptContext.Provider value={{ prompt, setPrompt }}>
+    <PromptContext.Provider
+      value={{ prompt, setPrompt, firstMessage, setFirstMessage }}
+    >
       {children}
     </PromptContext.Provider>
   );
