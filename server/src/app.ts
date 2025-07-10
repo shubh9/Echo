@@ -261,10 +261,6 @@ If no changes are needed, return the original values verbatim.
   }
 }
 
-app.get("/hello", (_req, res) => {
-  res.json({ message: "Hello from the server!" });
-});
-
 // Root endpoint
 app.get("/", (_req, res) => {
   res.json({ message: "hello world" });
