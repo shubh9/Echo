@@ -33,7 +33,7 @@ const App: React.FC = () => {
               letterSpacing: "-0.02em",
             }}
           >
-            Build Voice Assistants through Voice... duh
+            Build Voice Assistants through Voice
           </h1>
 
           <div style={{ marginTop: "1rem", marginBottom: 40 }}>
