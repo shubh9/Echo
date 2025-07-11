@@ -118,7 +118,7 @@ const VoiceAgentPanel: React.FC = () => {
           minHeight: MIN_HEIGHT,
           maxHeight: MAX_HEIGHT,
           overflow: "auto",
-          marginBottom: 40,
+          marginBottom: 10,
         }}
         onFocus={(e) => {
           e.target.style.borderColor = "#4f46e5";
@@ -127,6 +127,24 @@ const VoiceAgentPanel: React.FC = () => {
           e.target.style.borderColor = "#e1e5e9";
         }}
       />
+
+      {/* Descriptive text below the panel */}
+      {/* <p
+        style={{
+          fontSize: 14,
+          color: "#e5e7eb",
+          textAlign: "center",
+          margin: 0,
+          marginTop: 0,
+          maxWidth: 600,
+          lineHeight: 1.5,
+          fontFamily:
+            '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+        }}
+      >
+        Paste in a prompt or ask the voice to write a prompt for you. As you ask
+        for changes it will continually improve the prompt above
+      </p> */}
     </div>
   );
 };

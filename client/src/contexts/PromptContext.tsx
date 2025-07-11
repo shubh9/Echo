@@ -147,9 +147,12 @@ If they express concerns about time: "I understand. This will take approximately
 
 Remember that your ultimate goal is to collect complete and accurate information while providing a respectful, secure, and efficient experience for the customer. Always prioritize data accuracy while maintaining a conversational, patient approach to information collection.`;
 
-const defaultPrompt =
-  "You are voicetoprompt Voice AI, a helpful assistant. Keep responses concise and friendly.";
+const defaultPrompt = `You are voice to prompt Voice AI, a helpful assistant. Keep responses concise and friendly. 
 
+## How to get started
+Tell the user that to get started they should paste in a prompt or ask you to write a prompt for them. Explain that while they talk to you they can ask you to make changes and you will stop, rewrite the prompt and start again;`;
+
+const defaultFirstMessage = `Hey this is voice to prompt what's up?`;
 interface PromptContextValue {
   prompt: string;
   setPrompt: (prompt: string) => void;
@@ -168,7 +171,7 @@ export function PromptProvider({ children }: { children: ReactNode }) {
 
   const [firstMessage, setFirstMessage] = useState<string>(() => {
     const savedFirstMessage = localStorage.getItem("voiceAgent_firstMessage");
-    return savedFirstMessage || "";
+    return savedFirstMessage || defaultFirstMessage;
   });
 
   // Save to localStorage whenever values change

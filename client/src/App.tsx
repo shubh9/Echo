@@ -36,7 +36,7 @@ const App: React.FC = () => {
             Build Voice Assistants through Voice... duh
           </h1>
 
-          <div style={{ marginTop: "1rem" }}>
+          <div style={{ marginTop: "1rem", marginBottom: 40 }}>
             <VoiceAgentPanel />
           </div>
         </div>
