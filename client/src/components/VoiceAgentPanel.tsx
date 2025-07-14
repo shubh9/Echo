@@ -128,11 +128,14 @@ const VoiceAgentPanel: React.FC = () => {
         }}
       />
 
-      {/* Descriptive text below the panel */}
-      {/* <p
+      {/* Demo video link */}
+      <a
+        href="https://x.com/Shubh_Mit/status/1943772295375585581"
+        target="_blank"
+        rel="noopener noreferrer"
         style={{
           fontSize: 14,
-          color: "#e5e7eb",
+          color: "#fff",
           textAlign: "center",
           margin: 0,
           marginTop: 0,
@@ -140,11 +143,17 @@ const VoiceAgentPanel: React.FC = () => {
           lineHeight: 1.5,
           fontFamily:
             '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+          textDecoration: "none",
+        }}
+        onMouseOver={(e) => {
+          (e.target as HTMLElement).style.textDecoration = "underline";
+        }}
+        onMouseOut={(e) => {
+          (e.target as HTMLElement).style.textDecoration = "none";
         }}
       >
-        Paste in a prompt or ask the voice to write a prompt for you. As you ask
-        for changes it will continually improve the prompt above
-      </p> */}
+        Watch demo video here
+      </a>
     </div>
   );
 };
